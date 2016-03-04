@@ -11,6 +11,9 @@ import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.ReadableType;
+import com.facebook.react.bridge.WritableArray;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.common.MapBuilder;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
@@ -37,16 +40,17 @@ public class RNSettings extends ReactContextBaseJavaModule implements LifecycleE
 
     private SharedPreferences.OnSharedPreferenceChangeListener myListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
         @Override
-        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key)
+        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String aKey)
         {
-
             if (mIgnoringUpdates)
             {
                 return;
             }
-            mReactContext
-                    .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                    .emit("settingsUpdated", mSharedP.getAll());
+
+//            Map<String, Object> map = MapBuilder.newHashMap();
+//            mReactContext
+//                    .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+//                    .emit("settingsUpdated", map);
         }
     };
 
@@ -54,8 +58,9 @@ public class RNSettings extends ReactContextBaseJavaModule implements LifecycleE
     @Override
     public Map<String, Object> getConstants()
     {
-        return MapBuilder.<String, Object>of(
-               "settings", mSharedP.getAll());
+        Map<String, Object> map = MapBuilder.<String, Object>of(
+                "settings", mSharedP.getAll());
+        return map;
     }
 
     public RNSettings(ReactApplicationContext aReactContext)
@@ -63,6 +68,8 @@ public class RNSettings extends ReactContextBaseJavaModule implements LifecycleE
         super(aReactContext);
         mReactContext = aReactContext;
         mSharedP = aReactContext.getSharedPreferences(NAME, 0);
+
+        mReactContext.addLifecycleEventListener(this);
     }
 
     @Override
@@ -91,7 +98,7 @@ public class RNSettings extends ReactContextBaseJavaModule implements LifecycleE
     {
         if (aValues != null)
         {
-            mIgnoringUpdates = true;
+//            mIgnoringUpdates = true;
 
             ReadableMapKeySetIterator iter = aValues.keySetIterator();
 
@@ -129,10 +136,44 @@ public class RNSettings extends ReactContextBaseJavaModule implements LifecycleE
                     }
                     break;
                 }
-                editor.commit();
             }
 
-            mIgnoringUpdates = false;
+//            mIgnoringUpdates = false;
+            editor.commit();
+
+            WritableMap map = new WritableNativeMap();
+
+            Map<String, ?> tmp = mSharedP.getAll();
+
+            for (String key : tmp.keySet())
+            {
+                Object val = tmp.get(key);
+
+                if (val instanceof Integer) {
+                    int value = ((Integer) val).intValue();
+
+                    map.putInt(key, value);
+                } else if (val instanceof String) {
+                    String s = (String) val;
+                    map.putString(key, s);
+                } else if (val instanceof Double) {
+                    double d = ((Double) val).doubleValue();
+                    map.putDouble(key, d);
+                } else if (val instanceof Float) {
+                    float f = ((Float) val).floatValue();
+                    map.putDouble(key, f);
+                } else if (val instanceof Long) {
+                    long l = ((Long) val).longValue();
+                    map.putDouble(key, l);
+                } else if (val instanceof Boolean) {
+                    boolean b = ((Boolean) val).booleanValue();
+                    map.putBoolean(key, b);
+                }
+            }
+
+            mReactContext
+                    .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                    .emit("settingsUpdated", map);
         }
     }
 
@@ -142,10 +183,10 @@ public class RNSettings extends ReactContextBaseJavaModule implements LifecycleE
         if (aKeys != null && aKeys.size() > 0)
         {
             int size = aKeys.size();
-            mIgnoringUpdates = true;
+//            mIgnoringUpdates = true;
 
             //TODO: delete data
-            mIgnoringUpdates = false;
+//            mIgnoringUpdates = false;
         }
     }
 }
