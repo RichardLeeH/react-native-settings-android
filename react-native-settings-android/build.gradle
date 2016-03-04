@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.1”
+    buildToolsVersion "23.0.1"
 
     defaultConfig {
         minSdkVersion 16
@@ -12,7 +12,7 @@ android {
         ndk {
             abiFilters "armeabi-v7a", "x86"
         }
-        lintOptions {
+        lintOptions {  
             warning 'InvalidPackage'
         }
     }
